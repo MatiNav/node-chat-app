@@ -1,5 +1,6 @@
 const socketIO = require('socket.io');
 
+let io;
 
 function handleListenCreateMsg(socket) {
     socket.on('createMsg', (msg)=>{
@@ -8,10 +9,10 @@ function handleListenCreateMsg(socket) {
             return console.log('No msg was found !!');
         }
 
-        socket.emit('newMsg', ({
+        io.emit('newMsg', ({
             text: msg.text,
             from: msg.from,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().getTime()
         }))
     });
 }
@@ -35,8 +36,7 @@ function handleClientDisconnect(socket) {
  * @param {*} server 
  */
 function initSocket(server) {
-    let io = socketIO(server);
-
+    io = socketIO(server);
     io.on('connection', (socket) => {
         console.log('new user connected');
 
@@ -45,6 +45,10 @@ function initSocket(server) {
         handleClientDisconnect(socket);
     });
 }
+
+
+// io emite un evento a todas las conexiones, socket (la variable generada) emite un evento a las conexiones para 
+// ese canal en particular 
 
 
 module.exports = {
