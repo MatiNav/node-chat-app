@@ -9,17 +9,9 @@
     <p> Welcome to the chat app</p>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        let socket = io();
+    <script src="/js/index.js"> </script>
 
-        socket.on('connect',()=>{
-            console.log('connected to Socket.');
-        });
-
-        socket.on('disconnect', ()=>{
-            console.log('disconnected from Socket.');
-        })
-    </script>
+    <button onclick="onSendMsg()">Apretame !!</button>
 </body>
 
 

@@ -1,20 +1,30 @@
 const socketIO = require('socket.io');
 
 
-function handleListenCreateMsg(socket) {
-    socket.on('createMsg', (msg)=>{
+/**
+ * Recibe en el server el evento 'ceateEmail'
+ * @param {*} socket 
+ */
+function handleListenCreateEmail(socket) {
+    socket.on('createEmail', (email)=>{
+        console.log('ceateEmail', JSON.stringify(email,undefined,2));
+    })
+}
 
-        if(!msg){
-            return console.log('No msg was found !!');
-        }
 
-        socket.emit('newMsg', ({
-            text: msg.text,
-            from: msg.from,
-            createdAt: new Date().toISOString()
-        }))
+
+/**
+ * Emite desde el server el evento 'newEmail'
+ * @param {*} socket 
+ */
+function handleEmitNewEmail(socket) {
+    socket.emit('newEmail',{
+        from: 'matio@gmail.com',
+        text:'Somos cracks',
+        createdAt: 123
     });
 }
+
 
 
 
@@ -30,6 +40,7 @@ function handleClientDisconnect(socket) {
 }
 
 
+
 /**
  * Inicia el socket 
  * @param {*} server 
@@ -40,7 +51,9 @@ function initSocket(server) {
     io.on('connection', (socket) => {
         console.log('new user connected');
 
-        handleListenCreateMsg(socket);
+        handleEmitNewEmail(socket);
+
+        handleListenCreateEmail(socket);
 
         handleClientDisconnect(socket);
     });
