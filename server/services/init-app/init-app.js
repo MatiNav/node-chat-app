@@ -8,7 +8,7 @@ const express = require('express');
 function initApp() {
     const app = express();
     
-    const publicPath = path.join(__dirname, '..', 'public');
+    const publicPath = path.join(__dirname, '..', '..','..', 'public');
     app.use(express.static(publicPath));
     app.get('*', function (req, res) {
         res.sendFile(path.resolve(publicPath, 'index.html'));
