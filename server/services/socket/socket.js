@@ -1,6 +1,6 @@
 const socketIO = require('socket.io');
 
-const {generateMsg} = require('../../utils/utils');
+const {generateMsg, generateLocationMsg} = require('../../utils/utils');
 
 let io;
 
@@ -41,6 +41,13 @@ function handleClientDisconnect(socket) {
 }
 
 
+function handleListenLocationMsg(socket) {
+    socket.on('createLocationMessage', (coords)=>{
+        io.emit('locationMessage', generateLocationMsg('Admin',coords.lat, coords.long));
+    })
+}
+
+
 
 /**
  * Inicia el socket 
@@ -61,6 +68,8 @@ function initSocket(server) {
         handleListenCreateMsg(socket);
 
         handleClientDisconnect(socket);
+
+        handleListenLocationMsg(socket);
     });
 }
 
