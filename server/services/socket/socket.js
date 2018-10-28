@@ -1,16 +1,19 @@
 const socketIO = require('socket.io');
 
 const {generateMsg, generateLocationMsg} = require('../../utils/utils');
+const {isRealString} = require('../../utils/validation');
+const {Users}= require('../../utils/users');
 
 let io;
+const users = new Users();
 
-
-function greetNewUserAndTellToOthers(socket) {
+function broadcastNewMsg(socket, params) {
 
     socket.emit('newMsg', generateMsg('Admin','Welcome to the chat app'));
 
-    socket.broadcast.emit('newMsg',generateMsg('Admin','New user joined.'));
-    
+    socket.broadcast.to(params.room).emit('newMsg',generateMsg('Admin',params.name + ' joined.'));
+    // el 'to.(params.room)' le manda a toda la sala
+
 }
 
 
@@ -18,8 +21,10 @@ function greetNewUserAndTellToOthers(socket) {
 function handleListenCreateMsg(socket) {
     socket.on('createMsg', (msg, callback)=>{
 
-        if(!msg){
-            return console.log('No msg was found !!');
+        let user = users.getUser(socket.id);
+
+        if(!user && isRealString(msg.text)){
+            io.to(user.room).emit('newMsg', generateMsg(user.name, msg.text));
         }
 
         io.emit('newMsg', generateMsg(msg.from,msg.text));
@@ -36,7 +41,12 @@ function handleListenCreateMsg(socket) {
 function handleClientDisconnect(socket) {
     // este es para cuando el usuario se desconecta
     socket.on('disconnect', () => {
-        console.log('user was disconnected.');
+        let user= users.removeUser(socket.id);
+
+        if(user){
+            io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+            io.to(user.room).emit('newMsg', generateMsg('Admin' , user.name + ' has left.'));
+        }
     })
 }
 
@@ -45,6 +55,26 @@ function handleListenLocationMsg(socket) {
     socket.on('createLocationMessage', (coords)=>{
         io.emit('locationMessage', generateLocationMsg('Admin',coords.lat, coords.long));
     })
+}
+
+
+function handleListenJoin(socket) {
+    socket.on('join', (params, callback)=>{
+        if(!isRealString(params.name) || !isRealString(params.room)){
+            return callback('Name and Room are required');
+        }
+
+        socket.join(params.room);
+        users.removeUser(socket.id);
+        users.addUser(socket.id, params.name, params.room);
+
+        io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+        // socket.leave(paramas.room);
+
+        broadcastNewMsg(socket, params);
+
+        callback();
+    });
 }
 
 
@@ -63,7 +93,8 @@ function initSocket(server) {
         //     from:'Admin',
         // })
 
-        greetNewUserAndTellToOthers(socket);
+        handleListenJoin(socket);
+
 
         handleListenCreateMsg(socket);
 
